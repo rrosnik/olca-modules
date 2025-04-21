@@ -1,10 +1,15 @@
 package org.openlca.ipc.dtos;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.openlca.core.model.Process;
 import org.openlca.core.model.ProcessType;
 
 import java.util.List;
 
+
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class LcaProcessJson {
     public Long id;
     public String refId;

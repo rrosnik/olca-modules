@@ -1,10 +1,14 @@
 package org.openlca.ipc.dtos;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.openlca.core.model.Category;
 import org.openlca.core.model.ModelType;
 
 import java.util.List;
 
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class LcaCategoryJson {
     public Long id;
     public String refId;

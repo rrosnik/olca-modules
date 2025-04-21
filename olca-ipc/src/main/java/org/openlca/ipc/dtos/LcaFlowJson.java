@@ -1,10 +1,14 @@
 package org.openlca.ipc.dtos;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.openlca.core.model.Flow;
 import org.openlca.core.model.FlowType;
 
 import java.util.List;
 
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class LcaFlowJson {
     public long id;
     public String refId;
