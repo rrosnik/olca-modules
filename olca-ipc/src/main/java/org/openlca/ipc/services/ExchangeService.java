@@ -12,17 +12,17 @@ import java.util.Map;
 
 public class ExchangeService {
 
-	private final ExchangeDao dao;
+	private final IDatabase database;
 
 	private ExchangeService(IDatabase db) {
-		dao = new ExchangeDao(db);
+		this.database = db;
 	}
 
 	public void insertBulk(Map<Long, LcaExchangeJson> lcaExchangeJsonMap) {
 		List<LcaExchangeJson> ejl = new ArrayList<>(lcaExchangeJsonMap.values());
 
 		String sqlStmt = "insert into tbl_exchanges(id, f_owner, internal_id, f_flow, f_unit, is_input, f_flow_property_factor, resulting_amount_value) values (?, ?, ?, ?, ?, ?, ?, ?)";
-		NativeSql.on(dao.getDatabase()).batchInsert(
+		NativeSql.on(database).batchInsert(
 				sqlStmt,
 				lcaExchangeJsonMap.size(),
 				(i, statement) -> {
@@ -42,7 +42,7 @@ public class ExchangeService {
 
 	public void deleteBulk(List<Long> ids) {
 		String sqlStmt = "DELETE FROM tbl_exchanges WHERE id IN " + NativeSql.asList(new HashSet<>(ids));
-		NativeSql.on(dao.getDatabase()).runUpdate(sqlStmt);
+		NativeSql.on(database).runUpdate(sqlStmt);
 	}
 
 	public static ExchangeService of(IDatabase db) {

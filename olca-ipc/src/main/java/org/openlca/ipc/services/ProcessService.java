@@ -2,7 +2,6 @@ package org.openlca.ipc.services;
 
 import org.openlca.core.database.IDatabase;
 import org.openlca.core.database.NativeSql;
-import org.openlca.core.database.ProcessDao;
 import org.openlca.core.model.*;
 import org.openlca.ipc.dtos.LcaExchangeJson;
 import org.openlca.ipc.dtos.LcaFlowPropertyFactorJson;
@@ -12,10 +11,10 @@ import java.util.*;
 
 public class ProcessService {
 
-	private final ProcessDao dao;
+	private final IDatabase database;
 
-	public ProcessService(IDatabase db) {
-		dao = new ProcessDao(db);
+	private ProcessService(IDatabase db) {
+		this.database = db;
 	}
 
 	public List<LcaProcessJson> search(String searchTerm, Integer page, Integer pageSize, List<String> refIds) {
@@ -55,7 +54,7 @@ public class ProcessService {
 
 		sql.append(" OFFSET ").append((page - 1) * pageSize).append("ROWS").append(" FETCH NEXT ").append(pageSize).append(" ROWS ONLY ");
 
-		NativeSql.on(dao.getDatabase()).query(sql.toString(), List.of(), r -> {
+		NativeSql.on(database).query(sql.toString(), List.of(), r -> {
 			var d = new LcaProcessJson();
 			d.id = r.getLong(1);
 			d.refId = r.getString(2);
@@ -82,7 +81,7 @@ public class ProcessService {
 	public void insertBulk(Map<Long, LcaProcessJson> lcaProcessJsonMap) {
 		List<LcaProcessJson> pjl = new ArrayList<>(lcaProcessJsonMap.values());
 		String sqlStmt = "insert into tbl_processes(id, ref_id, name, f_category, process_type, f_quantitative_reference, last_internal_id) values (?, ?, ?, ?, ?, ?, ?)";
-		NativeSql.on(dao.getDatabase()).batchInsert(
+		NativeSql.on(database).batchInsert(
 				sqlStmt,
 				lcaProcessJsonMap.size(),
 				(i, statement) -> {
@@ -101,7 +100,7 @@ public class ProcessService {
 
 	public void deleteBulk(List<Long> ids) {
 		String sqlStmt = "DELETE FROM tbl_processes WHERE id IN " + NativeSql.asList(new HashSet<>(ids));
-		NativeSql.on(dao.getDatabase()).runUpdate(sqlStmt);
+		NativeSql.on(database).runUpdate(sqlStmt);
 	}
 //////////////////////
 

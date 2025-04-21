@@ -12,17 +12,16 @@ import java.util.Map;
 
 public class FlowPropertyFactorService {
 
-	FlowPropertyDao dao;
+	private final IDatabase database;
 
-	public FlowPropertyFactorService on(IDatabase db) {
-		dao = new FlowPropertyDao(db);
-		return this;
+	private FlowPropertyFactorService(IDatabase db) {
+		this.database = db;
 	}
 
 	public void insertBulk(Map<String, LcaFlowPropertyFactorJson> fpfsMap) {
 		List<LcaFlowPropertyFactorJson> fpfJL = new ArrayList<>(fpfsMap.values());
 		String sqlStmt = "insert into tbl_flow_property_factors(id, conversion_factor, f_flow, f_flow_property) values (?, ?, ?, ?)";
-		NativeSql.on(dao.getDatabase()).batchInsert(
+		NativeSql.on(database).batchInsert(
 				sqlStmt,
 				fpfsMap.size(),
 				(i, statement) -> {
@@ -37,7 +36,11 @@ public class FlowPropertyFactorService {
 
 	public void deleteBulk(List<Long> ids) {
 		String sqlStmt = "DELETE FROM tbl_flow_property_factors WHERE id IN " + NativeSql.asList(new HashSet<>(ids));
-		NativeSql.on(dao.getDatabase()).runUpdate(sqlStmt);
+		NativeSql.on(database).runUpdate(sqlStmt);
+	}
+
+	public static FlowPropertyFactorService of(IDatabase db) {
+		return new FlowPropertyFactorService(db);
 	}
 
 }
