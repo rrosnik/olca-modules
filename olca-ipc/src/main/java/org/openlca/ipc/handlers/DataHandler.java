@@ -108,16 +108,7 @@ public class DataHandler {
 		});
 	}
 
-	@Rpc("data/create/system")
-	public RpcResponse createProductSystem(RpcRequest req) {
-		if (req.params == null || !req.params.isJsonObject())
-			return Responses.invalidParams("no parameters given", req);
-		var obj = req.params.getAsJsonObject();
-		var processId = Json.getRefId(obj, "process");
-		var config = Json.getObject(obj, "config");
-		var resp = service.createProductSystem(processId, config);
-		return Responses.of(resp, req);
-	}
+
 
 	private RpcResponse withTypedParam(
 			RpcRequest req, BiFunction<JsonObject, ModelType, RpcResponse> fn) {
