@@ -5,11 +5,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import org.openlca.core.services.JsonResultService;
 import org.openlca.core.services.ServerConfig;
-import org.openlca.ipc.handlers.DataHandler;
-import org.openlca.ipc.handlers.ExportHandler;
-import org.openlca.ipc.handlers.HandlerContext;
-import org.openlca.ipc.handlers.ResultHandler;
-import org.openlca.ipc.handlers.RuntimeHandler;
+import org.openlca.ipc.handlers.*;
 import org.openlca.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +46,9 @@ public class Server {
 		register(new ResultHandler(context));
 		register(new RuntimeHandler(context));
 		register(new ExportHandler(context));
+		// new features
+		register(new LcaModelHandler(context));
+		register(new ProductSystemHandler(context));
 		return this;
 	}
 
