@@ -16,13 +16,13 @@ import gnu.trove.map.hash.TLongObjectHashMap;
  */
 public class FlowTable {
 
-	private final TLongObjectHashMap<FlowDescriptor> map = new TLongObjectHashMap<>();
+	protected final TLongObjectHashMap<FlowDescriptor> map = new TLongObjectHashMap<>();
 
 	public static FlowTable create(IDatabase database) {
 		return new FlowTable(database);
 	}
 
-	private FlowTable(IDatabase database) {
+	protected FlowTable(IDatabase database) {
 		init(database);
 	}
 

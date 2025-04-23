@@ -8,16 +8,16 @@ import org.openlca.core.model.ModelType;
 
 import com.google.common.cache.LoadingCache;
 
-public final class MatrixCache {
+public class MatrixCache {
 
-	private final boolean lazy;
-	private final IDatabase database;
+	protected final boolean lazy;
+	protected final IDatabase database;
 
-	private FlowTable flowTypeTable;
-	private ConversionTable conversionTable;
-	private ProcessTable processTable;
+	protected FlowTable flowTypeTable;
+	protected ConversionTable conversionTable;
+	protected ProcessTable processTable;
 
-	private LoadingCache<Long, List<CalcExchange>> exchangeCache;
+	protected LoadingCache<Long, List<CalcExchange>> exchangeCache;
 
 	public static MatrixCache createEager(IDatabase database) {
 		return new MatrixCache(database, false);
@@ -27,7 +27,7 @@ public final class MatrixCache {
 		return new MatrixCache(database, true);
 	}
 
-	private MatrixCache(IDatabase database, boolean lazy) {
+	protected MatrixCache(IDatabase database, boolean lazy) {
 		this.database = database;
 		this.lazy = lazy;
 		if (!lazy) {
@@ -43,7 +43,7 @@ public final class MatrixCache {
 		return database;
 	}
 
-	private FlowTable getFlowTypeTable() {
+	public FlowTable getFlowTypeTable() {
 		if (flowTypeTable == null)
 			flowTypeTable = FlowTable.create(database);
 		return flowTypeTable;

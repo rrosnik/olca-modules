@@ -20,8 +20,10 @@ import org.slf4j.LoggerFactory;
 
 public class ProcessTable {
 
-	private final TLongObjectHashMap<ProcessDescriptor> processes = new TLongObjectHashMap<>();
-	private final TLongObjectHashMap<FlowDescriptor> flows = new TLongObjectHashMap<>();
+
+
+	protected final TLongObjectHashMap<ProcessDescriptor> processes = new TLongObjectHashMap<>();
+	protected final TLongObjectHashMap<FlowDescriptor> flows = new TLongObjectHashMap<>();
 
 	/**
 	 * Maps IDs of product and waste flows to process IDs that have the
@@ -29,13 +31,13 @@ public class ProcessTable {
 	 * provider-process-id. We need this when we build a product system
 	 * automatically.
 	 */
-	private final TLongObjectHashMap<TLongArrayList> flowProviders = new TLongObjectHashMap<>();
+	protected final TLongObjectHashMap<TLongArrayList> flowProviders = new TLongObjectHashMap<>();
 
 	public static ProcessTable create(IDatabase db) {
 		return new ProcessTable(db);
 	}
 
-	private ProcessTable(IDatabase db) {
+	protected ProcessTable(IDatabase db) {
 		var log = LoggerFactory.getLogger(getClass());
 		log.trace("build process index table");
 
