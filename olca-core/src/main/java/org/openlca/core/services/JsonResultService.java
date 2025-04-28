@@ -613,7 +613,7 @@ public class JsonResultService {
 		}
 	}
 
-	private <T> Response<T> withResult(
+	public <T> Response<T> withResult(
 			String resultId, Function<LcaResult, Response<T>> fn) {
 		var res = resultOf(queue, resultId);
 		if (res.isEmpty())
@@ -654,4 +654,13 @@ public class JsonResultService {
 				: Response.error("no LCIA category exists for ID=" + impactId);
 	}
 
+	// added by @rrosnik - Reza Rostaminikoo
+	public LcaResult getResult(String resultId) {
+		var res = resultOf(queue, resultId);
+		if (res.isEmpty())
+			return null;
+		if (res.isError())
+			return null;
+		return res.value();
+	}
 }

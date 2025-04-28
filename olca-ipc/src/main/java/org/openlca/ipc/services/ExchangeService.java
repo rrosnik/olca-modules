@@ -21,7 +21,7 @@ public class ExchangeService {
 	public void insertBulk(Map<Long, LcaExchangeJson> lcaExchangeJsonMap) {
 		List<LcaExchangeJson> ejl = new ArrayList<>(lcaExchangeJsonMap.values());
 
-		String sqlStmt = "insert into tbl_exchanges(id, f_owner, internal_id, f_flow, f_unit, is_input, f_flow_property_factor, resulting_amount_value) values (?, ?, ?, ?, ?, ?, ?, ?)";
+		String sqlStmt = "insert into tbl_exchanges(id, f_owner, internal_id, f_flow, f_unit, is_input, f_flow_property_factor, resulting_amount_value, f_default_provider) values (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		NativeSql.on(database).batchInsert(
 				sqlStmt,
 				lcaExchangeJsonMap.size(),
@@ -35,7 +35,7 @@ public class ExchangeService {
 					statement.setBoolean(6, ex.isInput);
 					statement.setLong(7, ex.fpf.id);
 					statement.setDouble(8, ex.amount);
-//                statement.setLong(8, ex.defaultProviderId);
+					statement.setLong(9, ex.defaultProviderId);
 					return true;
 				});
 	}

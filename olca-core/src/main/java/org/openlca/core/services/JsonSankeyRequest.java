@@ -7,7 +7,7 @@ import org.openlca.core.results.LcaResult;
 import org.openlca.jsonld.Json;
 import org.openlca.util.Strings;
 
-class JsonSankeyRequest {
+public class JsonSankeyRequest {
 
 	private ImpactDescriptor impact;
 	private EnviFlow flow;

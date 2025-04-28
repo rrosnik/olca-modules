@@ -6,6 +6,7 @@ import com.sun.net.httpserver.HttpServer;
 import org.openlca.core.services.JsonResultService;
 import org.openlca.core.services.ServerConfig;
 import org.openlca.ipc.handlers.*;
+import org.openlca.overridenCore.matrix.cache.MatrixCache;
 import org.openlca.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,13 +43,23 @@ public class Server {
 		var cache = new Cache();
 		var results = JsonResultService.of(config);
 		var context = new HandlerContext(this, config, results, cache);
+
+		// cache data
+		long startTime = System.nanoTime();
+		var matCache = MatrixCache.createLazy(config.db());
+		long endTime = System.nanoTime();
+		System.out.println("MatrixCache created in " + (endTime - startTime) / 1_000_000 + " ms");
+		matCache.getProcessTable();
+
 		register(new DataHandler(context));
 		register(new ResultHandler(context));
 		register(new RuntimeHandler(context));
 		register(new ExportHandler(context));
-		// new features
+		// new features added by @rrosnik - Reza Rostaminikoo
+		register(new LcaProcessHandler(context));
 		register(new LcaModelHandler(context));
 		register(new ProductSystemHandler(context));
+		register(new DumpingResultHandler(context));
 		return this;
 	}
 

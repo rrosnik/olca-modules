@@ -1,14 +1,8 @@
 package org.openlca.ipc.handlers;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import org.openlca.core.database.ProductSystemDao;
-import org.openlca.core.matrix.ProductSystemBuilder;
-import org.openlca.core.matrix.cache.MatrixCache;
-import org.openlca.core.model.Process;
-import org.openlca.core.model.ProductSystem;
 import org.openlca.core.services.JsonDataService;
-import org.openlca.core.services.JsonUtil;
 import org.openlca.core.services.Response;
 import org.openlca.ipc.Responses;
 import org.openlca.ipc.Rpc;
@@ -49,51 +43,36 @@ public class ProductSystemHandler {
 			if (req.params == null || !req.params.isJsonObject())
 				return Responses.invalidParams("no parameters given", req);
 			var obj = req.params.getAsJsonObject();
-			var processId = Json.getRefId(obj, "process");
+			var processRefId = Json.getRefId(obj, "process");
 			var config = Json.getObject(obj, "config");
 
-			var resp = service.createProductSystem(processId, config);
-
-			return Responses.of(resp, req);
+			ProductSystemService psService = ProductSystemService.of(context.db());
+			var resp = psService.create(processRefId, config);
+			return Responses.of(Response.of(Json.asRef(resp)), req);
 		} catch (Exception e) {
 			log.error("Error in creating product system | {}", e.getMessage());
 			return Responses.serverError(e, req);
 		}
 	}
 
-//	@Rpc("data/system/create2")
-//	public RpcResponse create2(RpcRequest req) {
-//		try {
-//			if (req.params == null || !req.params.isJsonObject())
-//				return Responses.invalidParams("no parameters given", req);
-//			var obj = req.params.getAsJsonObject();
-//			var processId = Json.getRefId(obj, "process");
-//			var config = Json.getObject(obj, "config");
-//
-//			// var resp = service.createProductSystem(processId, config);
-//			// instead of above line
-//			var db = context.db();
-//			var process = db.get(Process.class, processId);
-//			if (process == null)
-//				return Responses.serverError(new Exception("process does not exist: id=" + processId), req);
-//			if (process.quantitativeReference == null)
-//				return Responses.serverError(new Exception("process does not have a quantitative reference"), req);
-//
-//			var system = db.insert(ProductSystem.of(process));
-//			var linkingConfig = JsonUtil.linkingConfigOf(config);
-//			MatrixCache matrixCache = MatrixCache.createLazy(db);
-//			matrixCache.registerNew();
-//			var builder = new ProductSystemBuilder(matrixCache, linkingConfig);
-//			builder.autoComplete(system);
-//			system = ProductSystemBuilder.update(db, system);
-//			var ref = Json.asRef(system);
-//			return Responses.of(Response.of(ref), req);
-//		} catch (Exception e) {
-//			log.error("Error in creating product system | {}", e.getMessage());
-//			return Responses.serverError(e, req);
-//		}
-//
-//	}
+	@Rpc("data/system/create2")
+	public RpcResponse create2(RpcRequest req) {
+		try {
+			if (req.params == null || !req.params.isJsonObject())
+				return Responses.invalidParams("no parameters given", req);
+			var obj = req.params.getAsJsonObject();
+			var processId = Json.getRefId(obj, "process");
+			var config = Json.getObject(obj, "config");
+
+			ProductSystemService psService = ProductSystemService.of(context.db());
+			var system = psService.create(processId, config);
+			return Responses.of(Response.of(Json.asRef(system)), req);
+		} catch (Exception e) {
+			log.error("Error in creating product system | {}", e.getMessage());
+			return Responses.serverError(e, req);
+		}
+
+	}
 
 
 	@Rpc("data/system/delete/processId")

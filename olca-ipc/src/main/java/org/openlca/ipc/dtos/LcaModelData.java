@@ -1,8 +1,7 @@
-package org.openlca.ipc.requests;
+package org.openlca.ipc.dtos;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.openlca.ipc.dtos.*;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 
 import java.util.HashMap;
@@ -22,6 +21,7 @@ public class LcaModelData {
 	public List<LcaFlowPropertyFactorJson> lcaFpfs;
 	public List<LcaFlowJson> lcaFlows;
 	public List<LcaProcessJson> lcaProcesses;
+	public LcaProductSystemJson productSystem;
 
 	public Map<String, LcaFlowPropertyFactorJson> getLcaFpfsMap() {
 		if (_lcaFpfs == null) {

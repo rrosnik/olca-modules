@@ -1,5 +1,9 @@
 package org.openlca.ipc.handlers;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.openlca.core.services.JsonResultService;
 import org.openlca.core.services.Response;
 import org.openlca.ipc.Responses;

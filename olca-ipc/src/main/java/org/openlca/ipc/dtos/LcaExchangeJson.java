@@ -2,7 +2,9 @@ package org.openlca.ipc.dtos;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.openlca.core.matrix.CalcExchange;
 import org.openlca.core.model.Exchange;
+import org.openlca.core.model.FlowType;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -10,6 +12,7 @@ public class LcaExchangeJson {
     public Long id;
     public Integer internalId;
     public Long flowId;
+		public FlowType flowType;
     public Long defaultProviderId;
     public Boolean isInput;
     public Double amount;
@@ -17,21 +20,18 @@ public class LcaExchangeJson {
     public LcaFlowPropertyFactorJson fpf;
     public Long processId;
 
-
-//    public Exchange toExchange(Map<Long, Flow> flowsMap, Map<Long, FlowProperty> flowPropertiesMap, Map<String, LcaFlowPropertyFactorJson> fpfsMap, Map<Long, Unit> unitsMap) {
-//        Exchange exchange = new Exchange();
-//        exchange.id = id;
-//        exchange.internalId = internalId;
-//        exchange.flow = flowsMap.get(flowId);
-//        exchange.defaultProviderId = defaultProviderId;
-//        exchange.isInput = isInput;
-//        exchange.amount = amount;
-//        exchange.unit = unitsMap.get(unitId);
-//        var addedFpf = fpfsMap.get(flowId + "-" + fpf.fpId);
-//        exchange.flowPropertyFactor = addedFpf.toFlowPropertyFactor(flowPropertiesMap);
-//        return exchange;
-//    }
-
+		public CalcExchange toCalcExchange() {
+			var result = new CalcExchange();
+			result.exchangeId = this.id;
+			result.amount = this.amount;
+			result.defaultProviderId = this.defaultProviderId;
+			result.conversionFactor = fpf.conversionFactor;
+			result.flowId = this.flowId;
+			result.flowType = this.flowType;
+			result.isInput = this.isInput;
+			result.processId = this.processId;
+			return result;
+		}
 
     public static LcaExchangeJson from(Exchange exchange) {
         LcaExchangeJson dto = new LcaExchangeJson();
@@ -43,6 +43,7 @@ public class LcaExchangeJson {
         dto.amount = exchange.amount;
         dto.unitId = exchange.unit.id;
         dto.fpf = LcaFlowPropertyFactorJson.from(exchange.flowPropertyFactor, exchange.flow.id);
+				dto.flowType = exchange.flow.flowType;
         return dto;
     }
 }

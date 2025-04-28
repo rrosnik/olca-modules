@@ -1,13 +1,28 @@
 package org.openlca.ipc.services;
 
+import com.google.gson.JsonObject;
 import org.openlca.core.database.IDatabase;
 import org.openlca.core.database.NativeSql;
 import org.openlca.core.database.ProductSystemDao;
+import org.openlca.core.matrix.ProductSystemBuilder;
+import org.openlca.core.matrix.linking.LinkingConfig;
+import org.openlca.core.matrix.linking.ProviderLinking;
+import org.openlca.core.model.Process;
+import org.openlca.core.model.ProcessType;
 import org.openlca.core.model.ProductSystem;
 import org.openlca.core.model.descriptors.ProductSystemDescriptor;
+import org.openlca.ipc.dtos.LcaProcessJson;
+import org.openlca.ipc.dtos.LcaProductSystemJson;
+import org.openlca.jsonld.Json;
+import org.openlca.overridenCore.matrix.cache.MatrixCache;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nullable;
 
 public class ProductSystemService {
 
+	private static final Logger log = LoggerFactory.getLogger(ProductSystemService.class);
 	private final IDatabase database;
 
 	private ProductSystemService(IDatabase db) {
@@ -33,7 +48,6 @@ public class ProductSystemService {
 	public void deleteByProcessId(long processId) {
 		try {
 			ProductSystemDescriptor psd = getByProcessId(processId);
-			ProductSystemDao dao = new ProductSystemDao(database);
 			// delete bulk from tbl_product_systems
 			// tbl_product_system_processes
 			// tbl_process_links
@@ -43,7 +57,7 @@ public class ProductSystemService {
 			NativeSql.on(database).runUpdate("DELETE FROM tbl_product_system_processes WHERE f_product_system = " + psd.id);
 			NativeSql.on(database).runUpdate("DELETE FROM tbl_process_links WHERE f_product_system = " + psd.id);
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error("Error in deleting product system by process id | {}", e.getMessage());
 			throw e;
 		}
 	}
@@ -58,6 +72,53 @@ public class ProductSystemService {
 		new ProductSystemDao(database).delete(id);
 	}
 
+
+	private static LinkingConfig linkingConfigOf(JsonObject json) {
+		var conf = new LinkingConfig();
+		if (json == null) return conf;
+		var providerLinking = Json.getEnum(json, "providerLinking", ProviderLinking.class);
+		if (providerLinking != null) conf.providerLinking(providerLinking);
+		var preferUnitProcesses = Json.getBool(json, "preferUnitProcesses", false);
+		conf.preferredType(preferUnitProcesses ? ProcessType.UNIT_PROCESS : ProcessType.LCI_RESULT);
+		Json.getDouble(json, "cutoff").ifPresent(conf::cutoff);
+		return conf;
+	}
+
+	public ProductSystem create(Long processId, JsonObject jsonConfig) {
+		var process = database.get(Process.class, processId);
+		var linkingConfig = ProductSystemService.linkingConfigOf(jsonConfig);
+		return create(process, linkingConfig);
+	}
+
+	public ProductSystem create(String processRefId, JsonObject jsonConfig) {
+		var process = database.get(Process.class, processRefId);
+		var linkingConfig = ProductSystemService.linkingConfigOf(jsonConfig);
+		return create(process, linkingConfig);
+	}
+
+	public ProductSystem create(LcaProductSystemJson productSystemJson, LcaProcessJson processJson) {
+		var process = database.get(Process.class, processJson.id);
+		var linkingConfig = new LinkingConfig().providerLinking(productSystemJson.providerLinking).preferredType(productSystemJson.processType);
+		var descriptor = productSystemJson.toDescriptor();
+		return create(process, linkingConfig, descriptor);
+	}
+
+	public ProductSystem create(Process process, LinkingConfig config) {
+		return create(process, config, null);
+	}
+
+	public ProductSystem create(Process process, LinkingConfig config, @Nullable ProductSystemDescriptor descriptor) {
+		var ps = ProductSystem.of(process);
+		if (descriptor != null) {
+			ps.id = descriptor.id;
+			ps.refId = descriptor.refId;
+			ps.name = descriptor.name;
+		}
+		var system = database.insert(ps);
+		var builder = new ProductSystemBuilder(MatrixCache.createLazy(database), config);
+		builder.autoComplete(system);
+		return ProductSystemBuilder.update(database, system);
+	}
 
 //////////////////////
 
