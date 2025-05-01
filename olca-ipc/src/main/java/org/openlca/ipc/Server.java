@@ -180,10 +180,10 @@ public class Server {
 	public void cachingDataFirst() {
 		// cache data
 		long startTime = System.nanoTime();
-//		var matCache = MatrixCache.createLazy(config.db());
+		var matCache = MatrixCache.createLazy(config.db());
 		long endTime = System.nanoTime();
-//		matCache.getProcessTable();
-//		matCache.getFlowTypeTable();
+		matCache.getProcessTable();
+		matCache.getFlowTypeTable();
 		System.out.println("MatrixCache created in " + (endTime - startTime) / 1_000_000 + " ms");
 	}
 
