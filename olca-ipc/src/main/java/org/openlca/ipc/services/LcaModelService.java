@@ -40,7 +40,6 @@ public class LcaModelService {
 		fpfService.insertBulk(lcaModelData.getLcaFpfsMap());
 		exchangeService.insertBulk(lcaModelData.getLcaExchangesMap());
 		processService.insertBulk(lcaModelData.getLcaProcessesMap());
-		productSystemService.create(lcaModelData.productSystem, lcaModelData.getLcaProcessesMap().get(lcaModelData.productSystem.process));
 
 		// feeding cache by new items
 		var cache = MatrixCache.createLazy(database);
@@ -54,6 +53,9 @@ public class LcaModelService {
 			processTable.addFlow(descriptor);
 		});
 		lcaModelData.getLcaExchangesMap().values().forEach(exchange -> processTable.addFlowProvider(exchange.toCalcExchange()));
+
+
+		productSystemService.create(lcaModelData.productSystem, lcaModelData.getLcaProcessesMap().get(lcaModelData.productSystem.process));
 	}
 
 	public void deleteLcaModel(JsonObject jsonData) throws JsonProcessingException {

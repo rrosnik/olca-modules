@@ -69,25 +69,45 @@ public class LcaModelHandler {
 	@Rpc("lcaModel/calculate")
 	public RpcResponse calculateLcaModel(RpcRequest req) {
 		try {
+			var startTime = System.nanoTime();
+			System.out.println("Calculating LCA Model request started");
 			var params = req.requireJsonObject();
 			if (params.isError()) return Responses.badRequest("Invalid JSON object", req);
 			// creation of LCA model
 			LcaModelService lcaModelService = LcaModelService.of(service.db());
 			try {
-				lcaModelService.createLcaModel(params.value().getAsJsonObject("lcaModel"));
-			} catch (Exception e) {
+				// cleaning the data before adding them just to make sure there is no duplicate
 				lcaModelService.deleteLcaModel(params.value().getAsJsonObject("lcaModel"));
+
+				System.out.println("Creating LCA Model");
+				lcaModelService.	createLcaModel(params.value().getAsJsonObject("lcaModel"));
+				System.out.println("LCA Model created successfully with time: " + (System.nanoTime() - startTime) / 1_000_000 + " ms");
+
+			} catch (Exception e) {
 				log.error("Error in Creating LCA Model | {}", e.getMessage());
+				var ds = System.nanoTime();
+				lcaModelService.deleteLcaModel(params.value().getAsJsonObject("lcaModel"));
+				System.out.println("Deleting LCA Model with time: " + (System.nanoTime() - ds) / 1_000_000 + " ms");
+				System.out.println(e.getMessage());
+				e.printStackTrace();
+				// e.printStackTrace();
+
 				return Responses.serverError(e, req);
 			}
 
 			// calculation request
+			System.out.println("Calculating LCA Model");
+			var ct = System.nanoTime();
 			var state = results.calculate(params.value().getAsJsonObject("calculationSetup"));
+			System.out.println("LCA Model calculated successfully with time: " + (System.nanoTime() - ct) / 1_000_000 + " ms");
 			if (state.isError()) {
-				lcaModelService.deleteLcaModel(params.value().getAsJsonObject("lcaModel"));
 				log.error("Error in calculation of LCA Model | {}", state.error());
+				var ds = System.nanoTime();
+				lcaModelService.deleteLcaModel(params.value().getAsJsonObject("lcaModel"));
+				System.out.println("Deleting LCA Model with time: " + (System.nanoTime() - ds) / 1_000_000 + " ms");
 				return Responses.serverError(new Exception("Server Error in calculation of Lca Model"), req);
 			}
+
 			return Responses.of(state, req);
 		} catch (Exception e) {
 			log.error("Error in calculating LCA Model | {}", e.getMessage());

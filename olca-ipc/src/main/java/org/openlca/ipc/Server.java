@@ -11,6 +11,7 @@ import org.openlca.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
@@ -39,18 +40,18 @@ public class Server {
 	}
 
 	public Server withDefaultHandlers() {
+		log.trace("This is a trace message.");
+		log.debug("This is a debug message.");
+		log.info("This is an info message."); // This should show up in the console
+		log.warn("This is a warn message.");
+		log.error("This is an error message.");
+
 		log.info("Register default handlers");
 		var cache = new Cache();
 		var results = JsonResultService.of(config);
 		var context = new HandlerContext(this, config, results, cache);
 
-		// cache data
-		long startTime = System.nanoTime();
-		var matCache = MatrixCache.createLazy(config.db());
-		long endTime = System.nanoTime();
-		System.out.println("MatrixCache created in " + (endTime - startTime) / 1_000_000 + " ms");
-		matCache.getProcessTable();
-
+		// register handlers to the server
 		register(new DataHandler(context));
 		register(new ResultHandler(context));
 		register(new RuntimeHandler(context));
@@ -60,6 +61,7 @@ public class Server {
 		register(new LcaModelHandler(context));
 		register(new ProductSystemHandler(context));
 		register(new DumpingResultHandler(context));
+
 		return this;
 	}
 
@@ -114,6 +116,7 @@ public class Server {
 
 	private void handle(HttpExchange t) {
 		var method = t.getRequestMethod();
+
 		if (!"POST".equals(method)) {
 			serve(t, Responses.requestError("only HTTP POST is allowed"));
 			return;
@@ -174,9 +177,21 @@ public class Server {
 		}
 	}
 
+	public void cachingDataFirst() {
+		// cache data
+		long startTime = System.nanoTime();
+//		var matCache = MatrixCache.createLazy(config.db());
+		long endTime = System.nanoTime();
+//		matCache.getProcessTable();
+//		matCache.getFlowTypeTable();
+		System.out.println("MatrixCache created in " + (endTime - startTime) / 1_000_000 + " ms");
+	}
+
 	public static void main(String[] args) {
 		var log = LoggerFactory.getLogger(Server.class);
 		try {
+
+
 			log.info("parse server configuration");
 			var config = ServerConfig.parse(args);
 			var server = new Server(config).withDefaultHandlers();
@@ -200,6 +215,8 @@ public class Server {
 				}
 			}));
 
+			log.info("Caching database in memory before running the server");
+			server.cachingDataFirst();
 			log.info("start the server");
 			server.start();
 

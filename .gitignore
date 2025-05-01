@@ -6,6 +6,9 @@
 .project
 **/.vscode/
 
+**/all-jarfiles
+olca-core/_olca_
+
 # generated files
 **/apidocs/
 **/target/

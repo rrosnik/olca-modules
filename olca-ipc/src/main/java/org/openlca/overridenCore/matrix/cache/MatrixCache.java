@@ -21,7 +21,7 @@ public class MatrixCache extends org.openlca.core.matrix.cache.MatrixCache {
 		return instance;
 	}
 
-	public static MatrixCache createLazy(IDatabase database) {
+	public static MatrixCache 	createLazy(IDatabase database) {
 		if (lazyInstance == null) {
 			lazyInstance = new MatrixCache(database, true);
 		}

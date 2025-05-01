@@ -18,6 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class LcaProcessHandler {
 
@@ -51,4 +53,36 @@ public class LcaProcessHandler {
 		}
 	}
 
+	@Rpc("data/processes/search")
+	public RpcResponse search(RpcRequest req) {
+		try {
+
+			var params = req.requireJsonObject();
+			if (params.isError()) return Responses.badRequest("Invalid JSON object", req);
+			String searchTerm = params.value().get("searchTerm").getAsString();
+			Integer page = params.value().get("page").getAsInt();
+			Integer pageSize = params.value().get("pageSize").getAsInt();
+			JsonArray refIdsJsonArray = params.value()
+					.getAsJsonArray("refIds");
+
+			List<String> refIds = new ArrayList<>();
+
+			if (refIdsJsonArray != null && !refIdsJsonArray.isEmpty())
+				refIds = refIdsJsonArray.asList().stream()
+						.filter(JsonElement::isJsonPrimitive)
+						.map(JsonElement::getAsString)
+						.collect(Collectors.toList());
+			ProcessService processService = ProcessService.of(service.db());
+			System.out.println("refIds: " + refIds);
+			var searchResult = processService.search(searchTerm, page, pageSize, refIds);
+			Gson gson = new Gson();
+			JsonArray jsonArray = new JsonArray();
+			for (LcaProcessJson process : searchResult) jsonArray.add(gson.toJsonTree(process));
+			return Responses.ok(jsonArray, req);
+		} catch (Exception e) {
+			System.out.println("Error in searching process | " + e.getMessage());
+			e.printStackTrace();
+			return Responses.serverError(e, req);
+		}
+	}
 }

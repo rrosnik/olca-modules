@@ -1,5 +1,6 @@
 package org.openlca.ipc.services;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.openlca.core.database.IDatabase;
 import org.openlca.core.database.NativeSql;
@@ -98,6 +99,11 @@ public class ProductSystemService {
 
 	public ProductSystem create(LcaProductSystemJson productSystemJson, LcaProcessJson processJson) {
 		var process = database.get(Process.class, processJson.id);
+		Gson gson = new Gson();
+		System.out.println("productSystemJson");
+		System.out.println(gson.toJsonTree(productSystemJson).toString());
+		System.out.println("processJson");
+		System.out.println(gson.toJsonTree(processJson).toString());
 		var linkingConfig = new LinkingConfig().providerLinking(productSystemJson.providerLinking).preferredType(productSystemJson.processType);
 		var descriptor = productSystemJson.toDescriptor();
 		return create(process, linkingConfig, descriptor);
