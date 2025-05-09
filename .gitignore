@@ -15,5 +15,5 @@ olca-core/_olca_
 **/bin/
 *.log
 
-*.*~
+
 *.DS_Store
