@@ -214,6 +214,11 @@ public class Derby implements IDatabase {
 			"org.apache.derby.iapi.jdbc.AutoloadedDriver");
 		connectionPool.setJdbcUrl(url);
 		connectionPool.setAutoCommit(false);
+		connectionPool.setInitializationFailTimeout(50000); // this is for connection pool timeout default was 1 millisecond
+		connectionPool.setInitializationFailTimeout(-1); // above option or make it retrty for ever until database is ready
+		connectionPool.setLeakDetectionThreshold(20000); // 20s - This helps debug cases where code grabs a connection but forgets to close it.
+		connectionPool.setConnectionTestQuery("VALUES 1");
+		connectionPool.setKeepaliveTime(300000); // 10 min - for long-lived connections
 	}
 
 	@Override

@@ -25,63 +25,69 @@ public class DumpingResultHandler {
 	@Rpc("result/dump")
 	public RpcResponse dump(RpcRequest req) {
 		return ResultRequest.of(req, rr -> {
-			ResultService resultService = ResultService.of(service.db(), results.getResult(rr.id()));
-			var result = new JsonObject();
+			try {
 
-			// add impact categories
-			var impactCategories = new JsonObject();
-			result.add("impactCategories", impactCategories);
-			resultService.getImpactCategoriesMap().forEach((key, impact) -> {
-				impactCategories.add(key, resultService.encodeImpact(impact));
-			});
+				ResultService resultService = ResultService.of(service.db(), results.getResult(rr.id()));
+				var result = new JsonObject();
 
-			// add total impacts
-			var impactValues = new JsonObject();
-			result.add("impactValues", impactValues);
-			resultService.getTotalImpacts().forEach(impactValues::addProperty);
+				// add impact categories
+				var impactCategories = new JsonObject();
+				result.add("impactCategories", impactCategories);
+				resultService.getImpactCategoriesMap().forEach((key, impact) -> {
+					impactCategories.add(key, resultService.encodeImpact(impact));
+				});
 
-			// add envi flows
-			var enviFlows = new JsonObject();
-			result.add("enviFlows", enviFlows);
-			resultService.getEnviFlows().forEach((key, enviFlow) -> enviFlows.add(String.valueOf(key), resultService.encodeEnviFlow(enviFlow)));
+				// add total impacts
+				var impactValues = new JsonObject();
+				result.add("impactValues", impactValues);
+				resultService.getTotalImpacts().forEach(impactValues::addProperty);
 
-			// add total envi flows
-			var totalEnviFlows = new JsonObject();
-			result.add("totalEnviFlows", totalEnviFlows);
-			resultService.getTotalEnviFlows().forEach((key, value) -> totalEnviFlows.addProperty(String.valueOf(key), value));
+				// add envi flows
+				var enviFlows = new JsonObject();
+				result.add("enviFlows", enviFlows);
+				resultService.getEnviFlows().forEach((key, enviFlow) -> enviFlows.add(String.valueOf(key), resultService.encodeEnviFlow(enviFlow)));
 
-			// add tech flows
-			var techFlows = new JsonObject();
-			result.add("techFlows", techFlows);
-			resultService.getTechFlows().forEach((key, techFlow) -> {
-				techFlows.add(key, resultService.encodeTechFlow(techFlow));
-			});
+				// add total envi flows
+				var totalEnviFlows = new JsonObject();
+				result.add("totalEnviFlows", totalEnviFlows);
+				resultService.getTotalEnviFlows().forEach((key, value) -> totalEnviFlows.addProperty(String.valueOf(key), value));
 
-			// add contribution trees
-			var contributionTrees = new JsonObject();
-			result.add("contributionTrees", contributionTrees);
-			resultService.getUpstreamTrees().forEach((impactRefId, tree) -> {
-				var treeJson = resultService.encodeUpstreamTree(tree);
-				contributionTrees.add(impactRefId, treeJson);
-			});
+				// add tech flows
+				var techFlows = new JsonObject();
+				result.add("techFlows", techFlows);
+				resultService.getTechFlows().forEach((key, techFlow) -> {
+					techFlows.add(key, resultService.encodeTechFlow(techFlow));
+				});
 
-			// add contribution of techFlows in enviFlows
-			var techFlowContributions = resultService.encodeNestedMap(resultService.getContributionofTechFlowsInEnviFlows());
-			result.add("flowContribInEnvi", techFlowContributions);
+				// add contribution trees
+				var contributionTrees = new JsonObject();
+				result.add("contributionTrees", contributionTrees);
+				resultService.getUpstreamTrees().forEach((impactRefId, tree) -> {
+					var treeJson = resultService.encodeUpstreamTree(tree);
+					contributionTrees.add(impactRefId, treeJson);
+				});
 
-			// add contribution of techFlows in impacts
-			var techFlowContributionsInImpacts = resultService.encodeNestedMap(resultService.getContributionOfTechFlowsInImpacts());
-			result.add("flowContribInImpacts", techFlowContributionsInImpacts);
+				// add contribution of techFlows in enviFlows
+				var techFlowContributions = resultService.encodeNestedMap(resultService.getContributionofTechFlowsInEnviFlows());
+				result.add("flowContribInEnvi", techFlowContributions);
 
-			// add contribution of envi in impacts
-			var enviFlowContributionsInImpacts = resultService.encodeNestedMap(resultService.getContributionOfEnviFlowsInImpacts());
-			result.add("enviContribInImpacts", enviFlowContributionsInImpacts);
+				// add contribution of techFlows in impacts
+				var techFlowContributionsInImpacts = resultService.encodeNestedMap(resultService.getContributionOfTechFlowsInImpacts());
+				result.add("flowContribInImpacts", techFlowContributionsInImpacts);
 
-			// add contribution of enviFlows in techFlows
-			var enviFlowContributions = resultService.encodeNestedMap(resultService.getContributionOfEnviFlowsInTechFlows());
-			result.add("enviContribInFlow", enviFlowContributions);
+				// add contribution of envi in impacts
+				var enviFlowContributionsInImpacts = resultService.encodeNestedMap(resultService.getContributionOfEnviFlowsInImpacts());
+				result.add("enviContribInImpacts", enviFlowContributionsInImpacts);
 
-			return Response.of(result);
+				// add contribution of enviFlows in techFlows
+				var enviFlowContributions = resultService.encodeNestedMap(resultService.getContributionOfEnviFlowsInTechFlows());
+				result.add("enviContribInFlow", enviFlowContributions);
+
+				return Response.of(result);
+			} catch (Exception e) {
+				e.printStackTrace();
+				return Response.error("failed to dump result: " + e.getMessage());
+			}
 		});
 	}
 }

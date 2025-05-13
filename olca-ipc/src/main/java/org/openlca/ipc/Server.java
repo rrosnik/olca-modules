@@ -171,6 +171,7 @@ public class Server {
 							+ " is not an RpcResponse", req);
 				return (RpcResponse) result;
 			} catch (Exception e) {
+				e.printStackTrace();
 				return Responses.error(500, "Failed to call method "
 						+ method + ": " + e.getMessage(), req);
 			}
