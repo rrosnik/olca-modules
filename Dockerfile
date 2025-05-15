@@ -16,7 +16,6 @@ RUN mvn clean package -DskipTests
 # Stage 2: Create the final minimal image
 FROM eclipse-temurin:22-jre-alpine
 
-ENV NBLA_LCA_SERVICE_DATA_DIR="/app/dbDir"
 ENV NBLA_LCA_SERVICE_DB_NAME="ecoinvent"
 ENV NBLA_LCA_SERVICE_PORT=4022
 ENV NBLA_LCA_SERVICE_THREADS=4
@@ -43,5 +42,5 @@ WORKDIR /app
 # run ipc server
 #ENTRYPOINT ["java", "-Dderby.user.APP=app", "-cp", "./lib/*", "org.openlca.ipc.Server" ,"-data", "G:\Projects\project_1\programming\Activity_2", "-db", "ecoinvent", "-port" ,"4022", "-threads", "4"]
 #ENTRYPOINT ["java", "-Dderby.user.APP=app", "-cp", "./lib/*", "org.openlca.ipc.Server" ,"-data", "/app/dbDir", "-db", "${NBLA_LCA_SERVICE_DB_NAME})", "-port" ,"${NBLA_LCA_SERVICE_PORT}", "-threads", "${NBLA_LCA_SERVICE_THREADS}"]
-ENTRYPOINT sh -c 'java -Dderby.user.APP=app -cp "./lib/*" org.openlca.ipc.Server -data "$NBLA_LCA_SERVICE_DATA_DIR" -db "$NBLA_LCA_SERVICE_DB_NAME" -port "$NBLA_LCA_SERVICE_PORT" -threads "$NBLA_LCA_SERVICE_THREADS"'
+ENTRYPOINT sh -c 'java -Dderby.user.APP=app -cp "./lib/*" org.openlca.ipc.Server -data "/app/dbDir" -db "$NBLA_LCA_SERVICE_DB_NAME" -port "$NBLA_LCA_SERVICE_PORT" -threads "$NBLA_LCA_SERVICE_THREADS"'
 
