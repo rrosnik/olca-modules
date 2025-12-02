@@ -7,12 +7,15 @@ import com.google.gson.JsonObject;
 import org.openlca.core.database.IDatabase;
 import org.openlca.ipc.dtos.LcaModelData;
 import org.openlca.overridenCore.matrix.cache.MatrixCache;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.stream.Collectors;
 
 public class LcaModelService {
 	private final IDatabase database;
 
+	private static final Logger log = LoggerFactory.getLogger(LcaModelService.class);
 	private final ProcessService processService;
 	private final CategoryService categoryService;
 	private final FlowService flowService;
@@ -29,11 +32,13 @@ public class LcaModelService {
 		this.exchangeService = ExchangeService.of(db);
 		this.productSystemService = ProductSystemService.of(db);
 	}
+
 	public void createLcaModel(JsonObject jsonData) throws JsonProcessingException {
 		ObjectMapper objectMapper = new ObjectMapper();
 		LcaModelData lcaModelData = objectMapper.readValue(jsonData.toString(), LcaModelData.class);
 		createLcaModel(lcaModelData);
 	}
+
 	public void createLcaModel(LcaModelData lcaModelData) {
 		categoryService.insertBulk(lcaModelData.getLcaCategoriesMap());
 		flowService.insertBulk(lcaModelData.getLcaFlowsMap());
@@ -47,7 +52,7 @@ public class LcaModelService {
 		var flowTable = cache.getFlowTypeTable();
 		lcaModelData.getLcaProcessesMap().values().forEach(process -> processTable.addProcess(process.toDescriptor()));
 		lcaModelData.getLcaFlowsMap().values().forEach(flow -> {
-			if(flow.isEcoinventFlow) return;
+			if (flow.isEcoinventFlow) return;
 			var descriptor = flow.toDescriptor();
 			flowTable.addFlow(descriptor);
 			processTable.addFlow(descriptor);
@@ -63,25 +68,33 @@ public class LcaModelService {
 		LcaModelData lcaModelData = objectMapper.readValue(jsonData.toString(), LcaModelData.class);
 		deleteLcaModel(lcaModelData);
 	}
-	public void deleteLcaModel(LcaModelData lcaModelData) {
-		categoryService.deleteBulk(lcaModelData.getLcaCategoriesMap().values().stream().map(c -> c.id).collect(Collectors.toList()));
-		flowService.deleteBulk(lcaModelData.getLcaFlowsMap().values().stream().map(c -> c.id).collect(Collectors.toList()));
-		fpfService.deleteBulk(lcaModelData.getLcaFpfsMap().values().stream().map(c -> c.id).collect(Collectors.toList()));
-		exchangeService.deleteBulk(lcaModelData.getLcaExchangesMap().values().stream().map(c -> c.id).collect(Collectors.toList()));
-		processService.deleteBulk(lcaModelData.getLcaProcessesMap().values().stream().map(c -> c.id).collect(Collectors.toList()));
-		productSystemService.deleteById(lcaModelData.productSystem.id);
 
-		//removing fed items from cache
+	public void deleteLcaModel(LcaModelData lcaModelData) {
+		productSystemService.deleteById(lcaModelData.productSystem.id);
+		exchangeService.deleteBulk(lcaModelData.getLcaExchangesMap().values().stream().map(c -> c.id).collect(Collectors.toList()));
+		fpfService.deleteBulk(lcaModelData.getLcaFpfsMap().values().stream().map(c -> c.id).collect(Collectors.toList()));
+		flowService.deleteBulk(lcaModelData.getLcaFlowsMap().values().stream().map(c -> c.id).collect(Collectors.toList()));
+		processService.deleteBulk(lcaModelData.getLcaProcessesMap().values().stream().map(c -> c.id).collect(Collectors.toList()));
+		categoryService.deleteBulk(lcaModelData.getLcaCategoriesMap().values().stream().map(c -> c.id).collect(Collectors.toList()));
+
+		// evict all cache items and log the time
 		var cache = MatrixCache.createLazy(database);
 		var processTable = cache.getProcessTable();
 		var flowTable = cache.getFlowTypeTable();
+		// evict all items and log the time
+
 		lcaModelData.getLcaProcessesMap().values().forEach(process -> processTable.removeProcess(process.id));
 		lcaModelData.getLcaFlowsMap().values().forEach(flow -> {
-			if(flow.isEcoinventFlow) return;
+			if (flow.isEcoinventFlow) return;
 			processTable.removeFlow(flow.id);
 			flowTable.remove(flow.id);
 		});
 		lcaModelData.getLcaExchangesMap().values().forEach(exchange -> processTable.removeFlowProvider(exchange.toCalcExchange()));
+		long start = System.nanoTime();
+		cache.evictAll();
+		long end = System.nanoTime();
+		long ms = (end - start) / 1_000_000;
+		log.info("Matrix cache evicted in {} ms", ms);
 	}
 
 	public static LcaModelService of(IDatabase db) {

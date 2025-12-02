@@ -68,6 +68,7 @@ public class ProcessService {
 			exchange.fpf = new LcaFlowPropertyFactorJson();
 			exchange.fpf.conversionFactor = 1.0;
 			exchange.fpf.fpId = r.getLong(8);
+			exchange.defaultProviderId = d.id;
 			d.quantitativeReference = exchange;
 
 
