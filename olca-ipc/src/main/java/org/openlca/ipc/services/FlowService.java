@@ -2,12 +2,15 @@ package org.openlca.ipc.services;
 
 import org.openlca.core.database.*;
 import org.openlca.ipc.dtos.LcaFlowJson;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 public class FlowService {
 
 	public final IDatabase database;
+	private static final Logger log = LoggerFactory.getLogger(FlowService.class);
 
 	private FlowService(IDatabase db) {
 		this.database = db;
@@ -35,8 +38,32 @@ public class FlowService {
 	}
 
 	public void deleteBulk(List<Long> ids) {
-		String sqlStmt = "DELETE FROM tbl_flows WHERE id IN " + NativeSql.asList(new HashSet<>(ids));
-		NativeSql.on(database).runUpdate(sqlStmt);
+		if (ids == null || ids.isEmpty()) {
+			log.info("deleteBulk flows: no IDs provided");
+			return;
+		}
+		var unique = new ArrayList<>(new HashSet<>(ids));
+		int batchSize = 1000;
+		int totalDeleted = 0;
+		for (int i = 0; i < unique.size(); i += batchSize) {
+			var batch = unique.subList(i, Math.min(i + batchSize, unique.size()));
+			int before = countExisting(batch);
+			String sqlStmt = "DELETE FROM tbl_flows WHERE id IN " + NativeSql.asList(new HashSet<>(batch));
+			NativeSql.on(database).runUpdate(sqlStmt); // returns void
+			int after = countExisting(batch);
+			int affected = before - after;
+			totalDeleted += affected;
+			log.debug("Deleted {} flows (existing before {}) in batch {}..{}", affected, before, i, Math.min(i + batchSize, unique.size()));
+		}
+		log.info("deleteBulk flows: requested={}, deleted={}", unique.size(), totalDeleted);
+	}
+
+	private int countExisting(List<Long> ids) {
+		if (ids == null || ids.isEmpty()) return 0;
+		final int[] result = {0};
+		String inList = NativeSql.asList(new HashSet<>(ids));
+		NativeSql.on(database).query("SELECT COUNT(*) FROM tbl_flows WHERE id IN " + inList, r -> { result[0] = r.getInt(1); return true; });
+		return result[0];
 	}
 
 	public static FlowService of(IDatabase db) {

@@ -100,7 +100,7 @@ public class ResultService {
 		return result;
 	}
 
-	public Map<String, Map<String, Double>> getContributionofTechFlowsInEnviFlows() {
+	public Map<String, Map<String, Double>> getContributionOfTechFlowsInEnviFlows() {
 		var startTime = System.nanoTime();
 		Map<String, Map<String, Double>> result = new HashMap<>();
 		getEnviFlows().values().forEach(ef -> {

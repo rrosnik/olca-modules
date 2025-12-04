@@ -1,9 +1,10 @@
 package org.openlca.ipc.services;
 
-import org.openlca.core.database.ExchangeDao;
 import org.openlca.core.database.IDatabase;
 import org.openlca.core.database.NativeSql;
 import org.openlca.ipc.dtos.LcaExchangeJson;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -13,6 +14,7 @@ import java.util.Map;
 public class ExchangeService {
 
 	private final IDatabase database;
+	private static final Logger log = LoggerFactory.getLogger(ExchangeService.class);
 
 	private ExchangeService(IDatabase db) {
 		this.database = db;
@@ -41,8 +43,33 @@ public class ExchangeService {
 	}
 
 	public void deleteBulk(List<Long> ids) {
-		String sqlStmt = "DELETE FROM tbl_exchanges WHERE id IN " + NativeSql.asList(new HashSet<>(ids));
-		NativeSql.on(database).runUpdate(sqlStmt);
+		if (ids == null || ids.isEmpty()) {
+			log.info("deleteBulk exchanges: no IDs provided");
+			return;
+		}
+		var unique = new ArrayList<>(new HashSet<>(ids));
+		int batchSize = 1000;
+		int totalDeleted = 0;
+		long start = System.currentTimeMillis();
+		for (int i = 0; i < unique.size(); i += batchSize) {
+			var batch = unique.subList(i, Math.min(i + batchSize, unique.size()));
+			int before = countExisting(batch);
+			String sqlStmt = "DELETE FROM tbl_exchanges WHERE id IN " + NativeSql.asList(new HashSet<>(batch));
+			NativeSql.on(database).runUpdate(sqlStmt); // runUpdate returns void
+			int after = countExisting(batch);
+			int affected = before - after;
+			totalDeleted += affected;
+			log.debug("Deleted {} exchanges (existing before {}) in batch {}..{}", affected, before, i, Math.min(i + batchSize, unique.size()));
+		}
+		log.info("deleteBulk exchanges: requested={}, deleted={}, durationMs={}", unique.size(), totalDeleted, System.currentTimeMillis() - start);
+	}
+
+	private int countExisting(List<Long> ids) {
+		if (ids == null || ids.isEmpty()) return 0;
+		final int[] result = {0};
+		String inList = NativeSql.asList(new HashSet<>(ids));
+		NativeSql.on(database).query("SELECT COUNT(*) FROM tbl_exchanges WHERE id IN " + inList, r -> { result[0] = r.getInt(1); return true; });
+		return result[0];
 	}
 
 	public static ExchangeService of(IDatabase db) {

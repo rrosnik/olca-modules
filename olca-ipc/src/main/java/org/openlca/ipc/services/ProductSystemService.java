@@ -6,6 +6,7 @@ import org.openlca.core.database.IDatabase;
 import org.openlca.core.database.NativeSql;
 import org.openlca.core.database.ProductSystemDao;
 import org.openlca.core.matrix.ProductSystemBuilder;
+import org.openlca.core.matrix.cache.MatrixCache;
 import org.openlca.core.matrix.linking.LinkingConfig;
 import org.openlca.core.matrix.linking.ProviderLinking;
 import org.openlca.core.model.Process;
@@ -15,7 +16,7 @@ import org.openlca.core.model.descriptors.ProductSystemDescriptor;
 import org.openlca.ipc.dtos.LcaProcessJson;
 import org.openlca.ipc.dtos.LcaProductSystemJson;
 import org.openlca.jsonld.Json;
-import org.openlca.overridenCore.matrix.cache.MatrixCache;
+//import org.openlca.overridenCore.matrix.cache.MatrixCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

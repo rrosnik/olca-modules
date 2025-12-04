@@ -1,6 +1,5 @@
 package org.openlca.ipc.handlers;
 
-import com.google.gson.JsonObject;
 import org.openlca.core.services.JsonDataService;
 import org.openlca.core.services.JsonResultService;
 import org.openlca.ipc.Responses;
@@ -80,7 +79,7 @@ public class LcaModelHandler {
 				lcaModelService.deleteLcaModel(params.value().getAsJsonObject("lcaModel"));
 
 				System.out.println("Creating LCA Model");
-				lcaModelService.	createLcaModel(params.value().getAsJsonObject("lcaModel"));
+				lcaModelService.createLcaModel(params.value().getAsJsonObject("lcaModel"));
 				System.out.println("LCA Model created successfully with time: " + (System.nanoTime() - startTime) / 1_000_000 + " ms");
 
 			} catch (Exception e) {

@@ -6,12 +6,10 @@ import com.sun.net.httpserver.HttpServer;
 import org.openlca.core.services.JsonResultService;
 import org.openlca.core.services.ServerConfig;
 import org.openlca.ipc.handlers.*;
-import org.openlca.overridenCore.matrix.cache.MatrixCache;
 import org.openlca.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
@@ -86,11 +84,9 @@ public class Server {
 				}
 				var paramTypes = method.getParameterTypes();
 				if (paramTypes.length != 1
-						|| !Objects.equals(paramTypes[0], RpcRequest.class)) {
-					log.error(error, methodId);
-					continue;
-				}
-				if (!Objects.equals(method.getReturnType(), RpcResponse.class)) {
+						|| !Objects.equals(paramTypes[0], RpcRequest.class)
+						|| !Objects.equals(method.getReturnType(), RpcResponse.class)
+				) {
 					log.error(error, methodId);
 					continue;
 				}
@@ -178,15 +174,15 @@ public class Server {
 		}
 	}
 
-	public void cachingDataFirst() {
-		// cache data
-		long startTime = System.nanoTime();
-		var matCache = MatrixCache.createLazy(config.db());
-		long endTime = System.nanoTime();
-		matCache.getProcessTable();
-		matCache.getFlowTypeTable();
-		System.out.println("MatrixCache created in " + (endTime - startTime) / 1_000_000 + " ms");
-	}
+//	public void cachingDataFirst() {
+//		// cache data
+//		long startTime = System.nanoTime();
+//		var matCache = MatrixCache.createLazy(config.db());
+//		long endTime = System.nanoTime();
+//		matCache.getProcessTable();
+//		matCache.getFlowTypeTable();
+//		System.out.println("MatrixCache created in " + (endTime - startTime) / 1_000_000 + " ms");
+//	}
 
 	public static void main(String[] args) {
 		var log = LoggerFactory.getLogger(Server.class);
@@ -216,9 +212,9 @@ public class Server {
 				}
 			}));
 
-			log.info("Caching database in memory before running the server");
-			server.cachingDataFirst();
-			log.info("start the server");
+//			log.info("Caching database in memory before running the server");
+//			server.cachingDataFirst();
+//			log.info("start the server");
 			server.start();
 
 		} catch (Exception e) {
